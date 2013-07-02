@@ -1,0 +1,107 @@
+# "lib/Makefile.darwin" -- for libcxxabi built on powerpc-darwin8
+
+# usage:
+# includer of this Makefile should specify:
+# PREFIX = install-location
+# CC = C compiler, e.g. from stage1-clang
+# CXX = C++ compiler, e.g. from stage1-clang++
+# OFLAGS = optimization flags to append to CXXFLAGS
+# CXXLIB_ROOT = path to libc++'s include headers (installed or in-source)
+
+# and:
+# include Makefile.darwin
+
+.SUFFIXES: .cpp .o
+VPATH = ../src
+SRCDIR = ../src
+TRIPLE = powerpc-apple-darwin8
+CXXLD = ${CXX}
+RC_ProjectSourceVersion ?= 1
+LIBDIR = ${PREFIX}/lib
+PKGINCLUDEDIR = ${PREFIX}/include/libcxxabi
+PKGLIBDIR = ${LIBDIR}/libcxxabi
+SOEXT = dylib
+
+# libunwind is bundled into system libgcc
+# CXXLIB_ROOT = /usr/include/c++/4.0.0
+UNWIND_INCLUDES = -I/usr/lib/gcc/${TRIPLE}/4.0.1/include
+
+# libcxx's include/__config defines _NOEXCEPT
+# CXXLIB_INCLUDES = -I${CXXLIB_ROOT} -I${CXXLIB_ROOT}/${TRIPLE}
+CXXLIB_INCLUDES = -cxx-isystem ${CXXLIB_ROOT}
+# UNWIND_INCLUDES = -I/usr/local/experimental/llvm/lib/clang/3.3/include
+
+CXXCPPFLAGS = -I../include ${CXXLIB_INCLUDES} ${UNWIND_INCLUDES}
+CXXFLAGS = -std=c++0x -stdlib=libc++ \
+	-fstrict-aliasing -Wstrict-aliasing=2 \
+	-Wsign-conversion -Wshadow -Wconversion -Wunused-variable \
+	-Wmissing-field-initializers -Wchar-subscripts -Wmismatched-tags \
+	-Wmissing-braces -Wshorten-64-to-32 -Wsign-compare \
+	-Wstrict-aliasing=2 -Wstrict-overflow=4 -Wunused-parameter \
+	-Wnewline-eof
+CXXFLAGS += -fPIC -fno-common
+CXXFLAGS += -no-integrated-as
+
+# ARCHS = -arch i386 -arch x86_64
+# ARCHS = -arch ppc
+
+LDFLAGS = \
+	-dynamiclib -nodefaultlibs  \
+	-current_version ${RC_ProjectSourceVersion} \
+	-compatibility_version 1 \
+	-lSystem \
+	-lgcc_s.10.4
+# -lgcc_s.10.4 for libunwind
+#	-install_name ${PKGLIBDIR}/$@
+
+#	if [ -f "${SDKROOT}/usr/local/lib/libCrashReporterClient.a" ]
+#	then
+#		LDFLAGS+=" -lCrashReporterClient"
+#	fi
+
+TARGET = libc++abi.${RC_ProjectSourceVersion}.${SOEXT}
+all: ${TARGET}
+
+.cpp.o:
+	${CXX} ${OFLAGS} ${ARCHS} ${CXXFLAGS} ${CXXCPPFLAGS} -c $< -o $@
+
+OBJS = \
+	abort_message.o \
+	cxa_aux_runtime.o \
+	cxa_default_handlers.o \
+	cxa_demangle.o \
+	cxa_exception.o \
+	cxa_exception_storage.o \
+	cxa_guard.o \
+	cxa_handlers.o \
+	cxa_new_delete.o \
+	cxa_personality.o \
+	cxa_unexpected.o \
+	cxa_vector.o \
+	cxa_virtual.o \
+	exception.o \
+	private_typeinfo.o \
+	stdexcept.o \
+	typeinfo.o \
+	darwin8-eprintf.o
+
+${TARGET}: ${OBJS}
+	${CXXLD} ${ARCHS} ${LDFLAGS} ${OBJS} -o $@
+
+install-headers:
+	mkdir -p ${PKGINCLUDEDIR} && \
+	cp ../include/*.h ${PKGINCLUDEDIR}
+install-exec:
+	mkdir -p ${PKGLIBDIR} && \
+	cp ${TARGET} ${PKGLIBDIR} && \
+	pushd ${PKGLIBDIR} && \
+	install_name_tool -id ${PKGLIBDIR}/${TARGET} ${TARGET} && \
+	ln -f -s ${TARGET} libc++abi.dylib && \
+	popd
+# alternatively, run install_name_tool after installation
+install: install-headers install-exec
+
+clean:
+	rm -f *.o
+	rm -f *.dylib
+
