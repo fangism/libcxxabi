@@ -64,7 +64,7 @@ TESTS_ENVIROMENT = DYLD_LIBRARY_PATH=../lib
 
 check: $(TESTS)
 	for t in $(TESTS) ; \
-	do echo "======== $$t" ; $(TESTS_ENVIROMENT) ./$$t ; \
+	do echo "======== $$t" ; $(TESTS_ENVIROMENT) ./$$t || echo "FAILED" ; \
 	done
 
 clean:
