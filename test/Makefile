@@ -52,6 +52,7 @@ TEST_SOURCES = \
 	unwind_04.cpp \
 	unwind_05.cpp
 
+
 TESTS = $(TEST_SOURCES:.cpp=)
 all: $(TESTS)
 
@@ -63,7 +64,7 @@ TESTS_ENVIROMENT = DYLD_LIBRARY_PATH=../lib
 
 check: $(TESTS)
 	for t in $(TESTS) ; \
-	do $(TESTS_ENVIROMENT) ./$$t ; \
+	do echo "======== $$t" ; $(TESTS_ENVIROMENT) ./$$t ; \
 	done
 
 clean:
