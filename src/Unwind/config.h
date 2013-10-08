@@ -28,7 +28,7 @@
 
 // Platform specific configuration defines.
 #if __APPLE__
-  #include <Availability.h>
+  #include <AvailabilityMacros.h>
   #ifdef __cplusplus
     extern "C" {
   #endif

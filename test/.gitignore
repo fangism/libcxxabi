@@ -1,3 +1,5 @@
+*.ii
+*.s
 catch_array_01
 catch_array_02
 catch_class_01

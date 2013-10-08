@@ -14,6 +14,7 @@ SOURCE_LIB += -L/Users/fang/local/src/LLVM-svn/libcxx-stage1-build/lib
 
 CXXFLAGS = -std=c++0x -stdlib=libc++
 CXXFLAGS += -O0 -no-integrated-as
+CXXFLAGS += -save-temps
 # TRIPLE = powerpc-apple-darwin8
 
 .SUFFIXES: .cpp

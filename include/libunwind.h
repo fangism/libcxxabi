@@ -18,11 +18,12 @@
 #include <stddef.h>
 
 #if __APPLE__
-  #include <Availability.h>
+  #include <AvailabilityMacros.h>
     #if __arm__
        #define LIBUNWIND_AVAIL __attribute__((unavailable))
     #else
-      #define LIBUNWIND_AVAIL __OSX_AVAILABLE_STARTING(__MAC_10_6, __IPHONE_5_0)
+//      #define LIBUNWIND_AVAIL __OSX_AVAILABLE_STARTING(__MAC_10_6, __IPHONE_5_0)
+      #define LIBUNWIND_AVAIL UNAVAILABLE_ATTRIBUTE
     #endif
 #else
   #define LIBUNWIND_AVAIL

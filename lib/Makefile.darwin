@@ -11,7 +11,9 @@
 # and:
 # include Makefile.darwin
 
-.SUFFIXES: .cpp .o
+USE_INCLUDED_LIBUNWIND ?= 0
+
+.SUFFIXES: .c .cpp .s .o
 VPATH = ../src
 SRCDIR = ../src
 TRIPLE = powerpc-apple-darwin8
@@ -24,23 +26,28 @@ SOEXT = dylib
 
 # libunwind is bundled into system libgcc
 # CXXLIB_ROOT = /usr/include/c++/4.0.0
+# libunwind now ships with libcxxabi
+ifeq ($(USE_INCLUDED_LIBUNWIND), 0)
 UNWIND_INCLUDES = -I/usr/lib/gcc/${TRIPLE}/4.0.1/include
+endif
 
 # libcxx's include/__config defines _NOEXCEPT
 # CXXLIB_INCLUDES = -I${CXXLIB_ROOT} -I${CXXLIB_ROOT}/${TRIPLE}
 CXXLIB_INCLUDES = -cxx-isystem ${CXXLIB_ROOT}
 # UNWIND_INCLUDES = -I/usr/local/experimental/llvm/lib/clang/3.3/include
 
-CXXCPPFLAGS = -I../include ${CXXLIB_INCLUDES} ${UNWIND_INCLUDES}
-CXXFLAGS = -std=c++0x -stdlib=libc++ \
-	-fstrict-aliasing -Wstrict-aliasing=2 \
+ASFLAGS = -force_cpusubtype_ALL
+CPPFLAGS = -I../include ${UNWIND_INCLUDES}
+CXXCPPFLAGS = $(CPPFLAGS) ${CXXLIB_INCLUDES}
+CFLAGS = -fstrict-aliasing -Wstrict-aliasing=2 \
 	-Wsign-conversion -Wshadow -Wconversion -Wunused-variable \
-	-Wmissing-field-initializers -Wchar-subscripts -Wmismatched-tags \
+	-Wmissing-field-initializers -Wchar-subscripts \
 	-Wmissing-braces -Wshorten-64-to-32 -Wsign-compare \
 	-Wstrict-aliasing=2 -Wstrict-overflow=4 -Wunused-parameter \
 	-Wnewline-eof
-CXXFLAGS += -fPIC -fno-common
-CXXFLAGS += -no-integrated-as
+CFLAGS += -fPIC -fno-common
+CFLAGS += -no-integrated-as
+CXXFLAGS = -std=c++0x -stdlib=libc++ -Wmismatched-tags $(CFLAGS)
 
 # ARCHS = -arch i386 -arch x86_64
 # ARCHS = -arch ppc
@@ -49,9 +56,11 @@ LDFLAGS = \
 	-dynamiclib -nodefaultlibs  \
 	-current_version ${RC_ProjectSourceVersion} \
 	-compatibility_version 1 \
-	-lSystem \
-	-lgcc_s.10.4
-# -lgcc_s.10.4 for libunwind
+	-lSystem
+ifeq ($(USE_INCLUDED_LIBUNWIND), 0)
+LDFLAGS += -lgcc_s.10.4
+endif
+# -lgcc_s.10.4 for libunwind -- not anymore, use the included libunwind
 #	-install_name ${PKGLIBDIR}/$@
 
 #	if [ -f "${SDKROOT}/usr/local/lib/libCrashReporterClient.a" ]
@@ -64,6 +73,25 @@ all: ${TARGET}
 
 .cpp.o:
 	${CXX} ${OFLAGS} ${ARCHS} ${CXXFLAGS} ${CXXCPPFLAGS} -c $< -o $@
+
+.c.o:
+	${CC} ${OFLAGS} ${ARCHS} ${CFLAGS} ${CPPFLAGS} -c $< -o $@
+
+.s.o:
+	${AS} ${ARCHS} ${ASFLAGS} $< -o $@
+
+LIBUNWIND_OBJS = \
+	Unwind/Unwind-sjlj.o \
+	Unwind/UnwindLevel1-gcc-ext.o \
+	Unwind/UnwindLevel1.o \
+	Unwind/UnwindRegistersRestore-ppc.o \
+	Unwind/UnwindRegistersSave-ppc.o \
+	Unwind/Unwind_AppleExtras.o \
+	Unwind/libunwind.o
+
+$(LIBUNWIND_OBJS): Unwind/objdirstamp
+Unwind/objdirstamp:
+	mkdir -p Unwind && touch $@
 
 OBJS = \
 	abort_message.o \
@@ -84,6 +112,16 @@ OBJS = \
 	stdexcept.o \
 	typeinfo.o \
 	darwin8-eprintf.o
+ifeq ($(USE_INCLUDED_LIBUNWIND), 1)
+OBJS += $(LIBUNWIND_OBJS)
+endif
+
+# PPC_DEFS = -D__ppc__=1
+Unwind/UnwindRegistersRestore-ppc.s: Unwind/UnwindRegistersRestore.s
+	$(CPP) $(PPC_DEFS) $< > $@
+
+Unwind/UnwindRegistersSave-ppc.s: Unwind/UnwindRegistersSave.s
+	$(CPP) $(PPC_DEFS) $< > $@
 
 ${TARGET}: ${OBJS}
 	${CXXLD} ${ARCHS} ${LDFLAGS} ${OBJS} -o $@

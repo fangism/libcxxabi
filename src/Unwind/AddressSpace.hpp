@@ -19,7 +19,7 @@
 #include <dlfcn.h>
 
 #if __APPLE__
-#include <mach-o/dyld_priv.h>
+// #include <mach-o/dyld_priv.h>
 namespace libunwind {
    bool checkKeyMgrRegisteredFDEs(uintptr_t targetAddr, void *&fde);
 }
