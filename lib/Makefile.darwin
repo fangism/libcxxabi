@@ -11,6 +11,7 @@
 # and:
 # include Makefile.darwin
 
+# not ready yet, needs porting
 USE_INCLUDED_LIBUNWIND ?= 0
 
 .SUFFIXES: .c .cpp .s .o
