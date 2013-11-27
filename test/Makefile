@@ -64,9 +64,13 @@ $(TESTS): $(BUILT_LIB)
 TESTS_ENVIROMENT = DYLD_LIBRARY_PATH=../lib
 
 check: $(TESTS)
+	@fail=0 ; \
+	echo "Using TESTS_ENVIROMENT=$(TESTS_ENVIROMENT)" ; \
 	for t in $(TESTS) ; \
-	do echo "======== $$t" ; $(TESTS_ENVIROMENT) ./$$t || echo "FAILED" ; \
-	done
+	do echo "======== $$t" ; $(TESTS_ENVIROMENT) ./$$t && echo PASS || { echo "FAIL" && fail=`expr $$fail + 1` ;} ; \
+	done ; \
+	echo "Failures: $$fail" ; \
+	test $$fail = 0
 
 clean:
 	rm -f $(TESTS)
