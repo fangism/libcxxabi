@@ -118,10 +118,10 @@ OBJS += $(LIBUNWIND_OBJS)
 endif
 
 # PPC_DEFS = -D__ppc__=1
-Unwind/UnwindRegistersRestore-ppc.s: Unwind/UnwindRegistersRestore.s
+Unwind/UnwindRegistersRestore-ppc.s: Unwind/UnwindRegistersRestore.S
 	$(CPP) $(PPC_DEFS) $< > $@
 
-Unwind/UnwindRegistersSave-ppc.s: Unwind/UnwindRegistersSave.s
+Unwind/UnwindRegistersSave-ppc.s: Unwind/UnwindRegistersSave.S
 	$(CPP) $(PPC_DEFS) $< > $@
 
 ${TARGET}: ${OBJS}
