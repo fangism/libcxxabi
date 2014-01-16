@@ -1,5 +1,3 @@
-*.ii
-*.s
 catch_array_01
 catch_array_02
 catch_class_01
@@ -32,3 +30,5 @@ unwind_02
 unwind_03
 unwind_04
 unwind_05
+
+PR*
