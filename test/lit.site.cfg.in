@@ -6,6 +6,9 @@ config.python_executable     = "@PYTHON_EXECUTABLE@"
 config.enable_shared         = @LIBCXXABI_ENABLE_SHARED@
 config.libcxx_includes       = "@LIBCXXABI_LIBCXX_INCLUDES@"
 config.llvm_unwinder         = @LIBCXXABI_USE_LLVM_UNWINDER@
+# use same options used to build libc++
+config.exe_linker_flags      = "@CMAKE_EXE_LINKER_FLAGS@"
+config.cxx_flags             = "@CMAKE_CXX_FLAGS@"
 
 # Let the main config do the real work.
 lit_config.load_config(config, "@LIBCXXABI_SOURCE_DIR@/test/lit.cfg")
